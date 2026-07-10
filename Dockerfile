@@ -1,4 +1,4 @@
-ARG BASEIMAGE=public.ecr.aws/docker/library/python:3.13.14-slim-bookworm@sha256:fcbd8dfc2605ba7c2eca646846c5e892b2931e41f6227985154a596f26ab8ed7
+ARG BASEIMAGE=public.ecr.aws/docker/library/python:3.14.6-slim-bookworm@sha256:4ff4b92a68355dbdb52584ab3391dff8d371a61d4e063468bfd0130e3189c6d9
 # uvのバージョンは .github/workflows の setup-uv と renovate が同期する
 ARG UVIMAGE=ghcr.io/astral-sh/uv:0.11.24@sha256:99ea34acedc870ba4ad11a1f540a1c04267c9f30aadc465a94406f52dfda2c36
 
