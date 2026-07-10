@@ -1,0 +1,54 @@
+name: scheduled-source-check
+
+on:
+  schedule:
+    - cron: "15 6 15 1,7 *" # 半年ごとに一度
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  job1:
+    name: Inspect project source
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
+          # renovate: datasource=docker depName=ghcr.io/astral-sh/uv
+          version: "0.11.24"
+
+      - name: Install tool
+        run: |
+          uv sync
+          uv pip install srcchecker -i https://pypi.n8s.jp/9c346c40-7d2f-473e-9580-d41ee07d25ea/packages/simple/ --extra-index-url https://pypi.org/simple
+
+      - name: Run django_settingschecker
+        id: run_django_settingschecker
+        continue-on-error: true
+        run: |
+          set +e
+          uv run django_settingschecker aaa_2/aaa_2/settings > django_settingschecker.result 2>&1
+          echo "EXITCODE=$?" >> "$GITHUB_ENV"
+
+      - name: Create issue for settings checker
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GH_REPO: "${{ github.repository }}"
+          TITLE: 未使用の可能性がある設定を検出しました
+        run: |
+          if [[ $EXITCODE != '0' ]]; then
+            gh issue create \
+              --title "$TITLE" \
+              --body-file django_settingschecker.result
+          fi

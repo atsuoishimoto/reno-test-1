@@ -1,0 +1,28 @@
+name: Security CodeQL / Python
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main", "deployment/production"]
+    paths:
+      - "**.py"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/security-codeql-python.yml"
+      - ".github/workflows/_security-codeql.yml"
+  schedule:
+    - cron: "40 20 * * 2"
+
+permissions: {}
+
+jobs:
+  codeql:
+    uses: ./.github/workflows/_security-codeql.yml
+    with:
+      language: python
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read

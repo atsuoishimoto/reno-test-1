@@ -1,0 +1,94 @@
+{
+  "family": "aaa_2-prod",
+  "executionRoleArn": "arn:aws:iam::742708366935:role/ecs-execution-role-aaa_2-prod",
+  "taskRoleArn": "arn:aws:iam::742708366935:role/ecs-task-role-aaa_2-prod",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "742708366935.dkr.ecr.ap-northeast-1.amazonaws.com/aaa_2-prod:<TAG>",
+      "essential": true,
+      "environment": [
+        {
+          "name": "APP_VERSION",
+          "value": "<TAG>"
+        },
+        {
+          "name": "DJANGO_SETTINGS_MODULE",
+          "value": "aaa_2.settings.production"
+        },
+        {
+          "name": "UWSGI_RELOAD_ON_RSS",
+          "value": "256"
+        },
+        {
+          "name": "UWSGI_EVIL_RELOAD_ON_RSS",
+          "value": "320"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awsfirelens"
+      },
+      "cpu": 1856,
+      "memory": 1440
+    },
+    {
+      "name": "nginx",
+      "image": "742708366935.dkr.ecr.ap-northeast-1.amazonaws.com/ds-nginx-prod:latest",
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/aws/ecs/aaa_2-prod",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "container"
+        }
+      },
+      "portMappings": [
+        {
+          "hostPort": 8080,
+          "containerPort": 8080
+        }
+      ],
+      "cpu": 64,
+      "memory": 128
+    },
+    {
+      "name": "log_router",
+      "image": "742708366935.dkr.ecr.ap-northeast-1.amazonaws.com/ds-firelens-prod:latest",
+      "essential": true,
+      "environment": [
+        {
+          "name": "ECS_CLUSTER",
+          "value": "aaa_2-prod"
+        },
+        {
+          "name": "ES_HOST",
+          "value": "log-es.n8s.local"
+        },
+        {
+          "name": "PARSER_NAME",
+          "value": "uwsgi_ltsv_parser"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/aws/ecs/aaa_2-prod",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "container"
+        }
+      },
+      "firelensConfiguration": {
+        "type": "fluentbit",
+        "options": {
+          "config-file-type": "file",
+          "config-file-value": "/fluent-bit/etc/extra.conf"
+        }
+      },
+      "cpu": 128,
+      "memory": 128
+    }
+  ],
+  "requiresCompatibilities": ["EC2"]
+}

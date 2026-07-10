@@ -1,0 +1,118 @@
+[project]
+dependencies = [
+  "Django==6.0.6",
+  "nikkei-utils==1.10.0",
+  "sentry-sdk==2.62.0",
+  "uWSGI==2.0.31",
+  "whitenoise==6.12.0",
+]
+description = "Add your description here"
+name = "aaa-2"
+readme = "README.md"
+requires-python = "==3.13.*"
+version = "0.1.0"
+
+[[tool.uv.index]]
+name = "nikkei"
+url = "https://pypi.n8s.jp/9c346c40-7d2f-473e-9580-d41ee07d25ea/packages/simple"
+
+[tool.uv.sources]
+nikkei-utils = [{index = "nikkei"}]
+
+[tool.uv]
+# 変更する場合は、.github/renovate.jsonのminimumReleaseAgeも合わせて変更してください。
+# 緊急のパッチを当てる際は、exclude-newer-packageで個別に対応してください。
+exclude-newer = "3 days"
+exclude-newer-package = {nikkei-utils = false}
+
+[dependency-groups]
+dev = [
+  "coverage==7.14.1",
+  "mypy==1.20.2",
+  "pytest==9.1.0",
+  "pytest-cov==7.1.0",
+  "pytest-django==4.12.0",
+  "pytest-mock==3.15.1",
+  "pytest-randomly==4.1.0",
+  "pytest-xdist==3.8.0",
+  "responses==0.26.1",
+  "ruff==0.15.17",
+  "taskipy==1.14.1",
+  "testfixtures==11.0.0",
+  "tox==4.55.1",
+  "tox-uv==1.35.2",
+]
+
+[tool.ruff]
+exclude = [
+  "htmlcov",
+  "**/.mypy_cache",
+  "**/.pytest_cache",
+  ".tox",
+  "venv",
+  ".venv",
+  "aaa_2/*/migrations/*",
+  "aaa_2/aaa_2/wsgi.py",
+]
+include = ["*.py"]
+
+lint.ignore = [
+  "E203", # Whitespace before ':'
+  "E501", # Line too long (82 &gt; 79 characters)
+  "D105", # undocumented-magic-method
+  "D107", # undocumented-public-init
+  "D205", # blank-line-after-summary
+  "D415", # ends-in-punctuation
+]
+
+lint.select = [
+  "F", # Pyflakes
+  "E", # pycodestyle error
+  "W", # pycodestyle warning
+  "I", # isort
+  "B", # flake8-bugbear
+  "C", # flake8-comprehensions
+  "UP", # pyupgrade  # "D", # pydocstyle（必要な場合は外す）
+]
+
+line-length = 99
+src = ["aaa_2"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 15
+
+[tool.coverage.report]
+include = ["aaa_2/**"]
+omit = [
+  "aaa_2/*/tests/**",
+  "aaa_2/*/tests.py",
+  "aaa_2/aaa_2/settings/**",
+  # ユニットテストでは実行されない Django のエントリポイントは対象外にする
+  "aaa_2/aaa_2/asgi.py",
+  "aaa_2/aaa_2/wsgi.py",
+  "aaa_2/manage.py",
+]
+skip_covered = true
+
+[tool.taskipy.tasks]
+createsuperuser = "python aaa_2/manage.py createsuperuser"
+format = '''
+ruff format aaa_2/
+ruff check aaa_2/ --fix
+'''
+migrate = "python aaa_2/manage.py migrate"
+minimum-format = '''
+ruff check aaa_2/ --ignore B,C,UP,D --fix
+ruff format aaa_2/
+'''
+runserver = "DJANGO_SETTINGS_MODULE=aaa_2.settings.local python aaa_2/manage.py runserver"
+unsafe-format = '''
+ruff check aaa_2/ --unsafe-fixes --fix
+ruff format aaa_2/
+'''
+
+[tool.mypy]
+ignore_missing_imports = true

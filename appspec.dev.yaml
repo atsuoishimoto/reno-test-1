@@ -1,0 +1,15 @@
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: <TaskDefinition>
+        # 以下はtask-definitionに合わせて適宜変更
+        LoadBalancerInfo:
+          ContainerName: nginx
+          ContainerPort: 8080
+        # EC2を利用する場合は以下を追加
+        CapacityProviderStrategy:
+          - Base: 0
+            CapacityProvider: aaa_2-ec2-capacity-provider-dev
+            Weight: 1

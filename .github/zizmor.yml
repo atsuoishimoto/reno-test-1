@@ -1,0 +1,14 @@
+# https://docs.zizmor.sh/configuration/
+rules:
+  # deploy は push(main / deployment/production)限定で PR 由来のキャッシュ汚染経路が無いため許容する
+  cache-poisoning:
+    ignore:
+      - deploy-development.yml
+      - deploy-production.yml
+  # 社内アクション（nikkei/gh-actions 等）は @main 参照で運用するため hash pin を要求しない
+  unpinned-uses:
+    config:
+      policies:
+        nikkei/*: ref-pin
+        Nikkei/*: ref-pin
+        "*": hash-pin

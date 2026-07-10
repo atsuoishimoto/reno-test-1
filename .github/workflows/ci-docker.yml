@@ -1,0 +1,83 @@
+name: CI Docker
+
+# Docker イメージに影響する変更を含む PR でのみ smoke build する
+# （main への push は deploy-development.yml が実ビルドする）
+on:
+  pull_request:
+    paths:
+      - "Dockerfile"
+      - ".dockerignore"
+      - ".github/hadolint.yaml"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "frontend/package.json"
+      - "frontend/pnpm-lock.yaml"
+      - "docker-compose*.yml"
+      - ".github/workflows/ci-docker.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: hadolint / smoke build / trivy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install hadolint
+        env:
+          # renovate: datasource=github-release-attachments depName=hadolint/hadolint
+          HADOLINT_VERSION: "v2.14.0"
+          HADOLINT_SHA256: "6bf226944684f56c84dd014e8b979d27425c0148f61b3bd99bcc6f39e9dc5a47"
+        run: |
+          wget -q "https://github.com/hadolint/hadolint/releases/download/${HADOLINT_VERSION}/hadolint-linux-x86_64" -O "$RUNNER_TEMP/hadolint"
+          echo "${HADOLINT_SHA256}  $RUNNER_TEMP/hadolint" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/hadolint"
+
+      - name: Run hadolint
+        run: |
+          "$RUNNER_TEMP/hadolint" --config .github/hadolint.yaml Dockerfile
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+
+      - name: Build runtime image (no push)
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        with:
+          context: .
+          target: runtime
+          push: false
+          load: true
+          tags: aaa-2:ci
+          cache-from: type=gha
+
+      - name: Install trivy
+        env:
+          # renovate: datasource=github-release-attachments depName=aquasecurity/trivy
+          TRIVY_VERSION: "v0.71.0"
+          TRIVY_SHA256: "30a3d22b23f88c233f1658f562fb477cae3b3e8b4761109d515b7698daf85814"
+        run: |
+          wget -q "https://github.com/aquasecurity/trivy/releases/download/${TRIVY_VERSION}/trivy_${TRIVY_VERSION#v}_Linux-64bit.tar.gz" -O "$RUNNER_TEMP/trivy.tar.gz"
+          echo "${TRIVY_SHA256}  $RUNNER_TEMP/trivy.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/trivy.tar.gz" -C "$RUNNER_TEMP" trivy
+
+      - name: Scan image with trivy
+        run: |
+          "$RUNNER_TEMP/trivy" image \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            --no-progress \
+            aaa-2:ci

@@ -1,0 +1,164 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests",
+    ":timezone(Asia/Tokyo)"
+  ],
+  "labels": ["dependencies"],
+  "schedule": ["* 7-9 * * 3"],
+  "minimumReleaseAge": "3 days",
+  "osvVulnerabilityAlerts": true,
+  "vulnerabilityAlerts": {
+    "schedule": ["at any time"],
+    "minimumReleaseAge": "3 hours",
+    "labels": ["dependencies", "security"]
+  },
+  "prConcurrentLimit": 10,
+  "prHourlyLimit": 0,
+  "lockFileMaintenance": {
+    "enabled": true
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+version:\\s*\"(?<currentValue>[\\d.]+)\""
+      ],
+      "versioningTemplate": "pep440"
+    },
+    {
+      "description": "ワークフロー内の `# renovate:` コメント付き *_VERSION / *_SHA256 env を各ツールのリリースに追従させる（SHA256 もリリースアセットの digest として自動更新される）",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>\\S+)\\s+[A-Z_]+_VERSION: \"(?<currentValue>[^\"]+)\"\\s+[A-Z_]+_SHA256: \"(?<currentDigest>[a-f0-9]+)\""
+      ]
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)Dockerfile$/"],
+      "matchStrings": [
+        "ARG\\s+UVIMAGE\\s*=\\s*ghcr\\.io/astral-sh/uv:(?<currentValue>[\\d.]+)(?:@(?<currentDigest>sha256:[a-f0-9]+))?"
+      ],
+      "depNameTemplate": "ghcr.io/astral-sh/uv",
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "pep440"
+    },
+    {
+      "description": "docker run で実行する semgrep イメージの tag+digest を追従させる（github-actions manager の対象外のため）",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+SEMGREP_IMAGE: \"[^:]+:(?<currentValue>[\\d.]+)@(?<currentDigest>sha256:[a-f0-9]+)\""
+      ],
+      "versioningTemplate": "docker"
+    },
+    {
+      "description": "ワークフロー env の NODE_VERSION を Dockerfile の node image と同じ patch まで追従させる（下の node group で Dockerfile 側と 1 PR に集約）",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+NODE_VERSION: \"(?<currentValue>[\\d.]+)\""
+      ],
+      "versioningTemplate": "node"
+    },
+    {
+      "description": "ワークフロー env の PYTHON_VERSION を Dockerfile の python image と同じ patch まで追従させる（下の python group で Dockerfile 側と 1 PR に集約）",
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\s+PYTHON_VERSION: \"(?<currentValue>[\\d.]+)\""
+      ],
+      "versioningTemplate": "docker"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchPackageNames": ["ghcr.io/astral-sh/uv"],
+      "groupName": "uv"
+    },
+    {
+      "description": "Dockerfile の node image（dockerfile manager）と CI workflow の NODE_VERSION（custom regex manager）を patch まで同期し 1 PR に集約する",
+      "matchPackageNames": ["node"],
+      "groupName": "node"
+    },
+    {
+      "description": "Dockerfile の python image（dockerfile manager）と CI workflow の PYTHON_VERSION（custom regex manager）を patch まで同期し 1 PR に集約する",
+      "matchPackageNames": ["python", "**/python"],
+      "groupName": "python"
+    },
+    {
+      "description": "python の自動更新はマイクロバージョン（patch, 3.13.x）のみとする",
+      "matchPackageNames": ["python", "**/python"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false
+    },
+    {
+      "description": "docker datasource は releaseTimestamp を持たない（マルチアーキ tag・同一タグの digest 付け替えとも）。Renovate 42 以降は timestamp 不明を cooldown 未達と扱うため、minimumReleaseAge を課すと stability-days が永遠に pending になる（version 更新の #1429、digest 付け替えとも同根）。docker は cooldown を無効化し、代わりに weekly schedule（リポジトリ既定と同じ水曜 7-9 JST）で更新頻度を抑える。tag は digest pin 済みで信頼している前提。actions の SHA ピン等 docker 以外の digest-only 更新は稀かつ異常検知の意味があるため対象外（pending のまま手動トリガーで確認する）",
+      "matchDatasources": ["docker"],
+      "minimumReleaseAge": null,
+      "schedule": ["* 7-9 * * 3"]
+    },
+    {
+      "description": "ghcr.io/astral-sh/uv は上の custom regex manager で tag+digest を管理するため、組み込み dockerfile manager による同一 ARG 行の重複検出を無効化する（python/node 等の他 image は組み込みのまま）",
+      "matchManagers": ["dockerfile"],
+      "matchPackageNames": ["ghcr.io/astral-sh/uv"],
+      "enabled": false
+    },
+    {
+      "description": "astral-sh/setup-uv の version 入力も custom regex manager（ghcr.io/astral-sh/uv）で Dockerfile と同一 group 管理するため、組み込み github-actions manager による同一行の重複検出（astral-sh/uv, github-releases）を無効化する。放置すると group 外の単独 PR が workflow だけ先に更新し Dockerfile とドリフトする（#1365 / #1424）。setup-uv 自体（action の版）の更新には影響しない",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["astral-sh/uv"],
+      "enabled": false
+    },
+    {
+      "description": "社内アクション（nikkei 等）は @main 参照を維持するため digest pin しない",
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["nikkei/**"],
+      "pinDigests": false
+    },
+    {
+      "description": "GitHub Actions の version / digest(hash) 更新を 1 PR に集約する。無効化済みの astral-sh/uv は enabled:false が優先されるため PR には出ない",
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    },
+    {
+      "description": "python のライブラリ更新は runtime（project.dependencies）/dev（dependency-groups.dev）・major/minor/patch を問わず 1 PR に集約する（lockFileMaintenance は uv-lockfile グループで管理）",
+      "matchManagers": ["pep621"],
+      "matchUpdateTypes": ["major", "minor", "patch", "pin", "digest", "rollback", "bump", "replacement"],
+      "groupName": "python-dependencies"
+    },
+    {
+      "description": "nikkei-utils は pyproject.toml の exclude-newer-package と同様に cooldown の対象外とする",
+      "matchPackageNames": ["nikkei-utils"],
+      "minimumReleaseAge": null
+    },
+    {
+      "description": "frontend のライブラリ更新は dependencies/devDependencies・major/minor/patch を問わず 1 PR に集約する（lockFileMaintenance は pnpm-lockfile グループで管理）",
+      "matchManagers": ["npm"],
+      "matchFileNames": ["frontend/package.json"],
+      "matchUpdateTypes": ["major", "minor", "patch", "pin", "digest", "rollback", "bump", "replacement"],
+      "groupName": "frontend-dependencies"
+    },
+    {
+      "description": "pnpm-lock.yaml の lockFileMaintenance（indirect も含めて再 resolve）。lockFileMaintenance には releaseTimestamp がなく minimumReleaseAge が永遠に pending になるため null で無効化。cooldown は pnpm-workspace.yaml の minimumReleaseAge で効く",
+      "matchManagers": ["npm"],
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "minimumReleaseAge": null,
+      "schedule": ["* 7-9 * * 3"],
+      "commitMessageAction": "pnpm lockfile maintenance",
+      "groupName": "pnpm-lockfile"
+    },
+    {
+      "description": "uv.lock の lockFileMaintenance（indirect も含めて再 resolve）。lockFileMaintenance には releaseTimestamp がなく minimumReleaseAge が永遠に pending になるため null で無効化。cooldown は pyproject.toml [tool.uv] の exclude-newer で効く",
+      "matchManagers": ["pep621"],
+      "matchUpdateTypes": ["lockFileMaintenance"],
+      "minimumReleaseAge": null,
+      "schedule": ["* 7-9 * * 3"],
+      "commitMessageAction": "uv lockfile maintenance",
+      "groupName": "uv-lockfile"
+    }
+  ]
+}

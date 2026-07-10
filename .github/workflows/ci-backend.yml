@@ -1,0 +1,71 @@
+name: CI backend
+
+on:
+  pull_request:
+    paths:
+      - "aaa_2/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/ci-backend.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # renovate: datasource=docker depName=python
+  PYTHON_VERSION: "3.13.14" # Dockerfile の python image に合わせる
+
+jobs:
+  backend:
+    name: ruff / mypy / pytest
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
+          python-version: "${{ env.PYTHON_VERSION }}"
+          # renovate: datasource=docker depName=ghcr.io/astral-sh/uv
+          version: "0.11.24"
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Ruff lint
+        run: uv run ruff check --output-format=github --ignore D aaa_2
+
+      - name: Ruff format
+        run: uv run ruff format --check --diff --quiet aaa_2
+
+      # cache は同一 key を上書きできないため run_id で毎回保存し、restore-keys で直近を復元する
+      - name: Restore mypy cache
+        uses: actions/cache@2c8a9bd7457de244a408f35966fab2fb45fda9c8 # v6.0.0
+        with:
+          path: .mypy_cache
+          key: mypy-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('uv.lock', 'pyproject.toml') }}-${{ github.run_id }}
+          restore-keys: |
+            mypy-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-${{ hashFiles('uv.lock', 'pyproject.toml') }}-
+            mypy-${{ runner.os }}-py${{ env.PYTHON_VERSION }}-
+
+      # problem matcher がエラー行をパースして PR の Files changed に annotation 表示する
+      - name: mypy
+        run: |
+          echo "::add-matcher::.github/problem-matchers/mypy.json"
+          uv run mypy --install-types --non-interactive aaa_2
+
+      # --cov-fail-under はテンプレート生成直後に通る値。
+      - name: pytest
+        run: uv run pytest ./aaa_2 -n logical --dist loadfile --showlocals --durations=5 --cov-report=term-missing --cov=aaa_2 --cov-fail-under=50

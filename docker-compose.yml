@@ -1,0 +1,20 @@
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - "/tmp:/log"
+      - "/tmp:/tmp"
+    mem_reservation: 768m
+    environment:
+      DJANGO_SETTINGS_MODULE: aaa_2.settings.local
+      APP_VERSION: local
+      # AWS_DEFAULT_REGION: ap-northeast-1
+      # AWS_ACCESS_KEY_ID: aws_access_key
+      # AWS_SECRET_KEY_ID: aws_secret_key
+      USE_UWSGI_HTTP: "true"
+    command: uwsgi uwsgi.ini
+    read_only: true
