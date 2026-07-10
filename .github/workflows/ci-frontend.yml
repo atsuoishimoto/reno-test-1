@@ -15,7 +15,7 @@ concurrency:
 
 env:
   # renovate: datasource=docker depName=node
-  NODE_VERSION: "24.17.0" # Dockerfile の node image に合わせる
+  NODE_VERSION: "24.18.0" # Dockerfile の node image に合わせる
 
 jobs:
   frontend:
