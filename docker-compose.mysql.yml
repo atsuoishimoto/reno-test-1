@@ -4,7 +4,7 @@ volumes:
 
 services:
   db:
-    image: mysql:8.0@sha256:64756cc92f707eb504496d774353990bcb0f6999ddf598b6ad188f2da66bd000
+    image: mysql:8.0@sha256:7dcddc01f13bab2f15cde676d44d01f61fc9f99fe7785e86196dfc07d358ae2b
     ports:
       - "3306:3306"
     environment:
