@@ -76,7 +76,7 @@ jobs:
           sed -i -e "s/<TAG>/${IMAGE_TAG}/g" ECS-task-definition.dev.json
 
       - name: Deploy to Amazon ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@fc8fc60f3a60ffd500fcb13b209c59d221ac8c8c # v2.6.1
+        uses: aws-actions/amazon-ecs-deploy-task-definition@c465972ecbd160473f22e683363b422a5412a3de # v2.6.3
         with:
           cluster: reno_test_1-dev
           service: reno_test_1-dev
