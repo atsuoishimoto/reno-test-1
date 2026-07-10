@@ -1,0 +1,68 @@
+name: CI GHA
+
+on:
+  pull_request:
+    paths:
+      - ".github/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: actionlint / yamlfmt / zizmor
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install actionlint
+        env:
+          # renovate: datasource=github-release-attachments depName=rhysd/actionlint
+          ACTIONLINT_VERSION: "v1.7.12"
+          ACTIONLINT_SHA256: "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
+        run: |
+          wget -q "https://github.com/rhysd/actionlint/releases/download/${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION#v}_linux_amd64.tar.gz" -O "$RUNNER_TEMP/actionlint.tar.gz"
+          echo "${ACTIONLINT_SHA256}  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$RUNNER_TEMP" actionlint
+
+      - name: Install yamlfmt
+        env:
+          # renovate: datasource=github-release-attachments depName=google/yamlfmt
+          YAMLFMT_VERSION: "v0.21.0"
+          YAMLFMT_SHA256: "1f300d9257b232bb3b541d7fb1b0e6b3c121bcbab381c86cd38cb8722be8a566"
+        run: |
+          wget -q "https://github.com/google/yamlfmt/releases/download/${YAMLFMT_VERSION}/yamlfmt_${YAMLFMT_VERSION#v}_Linux_x86_64.tar.gz" -O "$RUNNER_TEMP/yamlfmt.tar.gz"
+          echo "${YAMLFMT_SHA256}  $RUNNER_TEMP/yamlfmt.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/yamlfmt.tar.gz" -C "$RUNNER_TEMP" yamlfmt
+
+      - name: Install zizmor
+        env:
+          # renovate: datasource=github-release-attachments depName=zizmorcore/zizmor
+          ZIZMOR_VERSION: "v1.25.2"
+          ZIZMOR_SHA256: "aa1facd105f0d83fe5c55b1adcd9d7417de5d83aa27471f91dc0b66cf3803577"
+        run: |
+          wget -q "https://github.com/zizmorcore/zizmor/releases/download/${ZIZMOR_VERSION}/zizmor-x86_64-unknown-linux-gnu.tar.gz" -O "$RUNNER_TEMP/zizmor.tar.gz"
+          echo "${ZIZMOR_SHA256}  $RUNNER_TEMP/zizmor.tar.gz" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/zizmor.tar.gz" -C "$RUNNER_TEMP" zizmor
+
+      # problem matcher がエラー行をパースして PR の Files changed に annotation 表示する
+      - name: Run actionlint
+        run: |
+          echo "::add-matcher::.github/problem-matchers/actionlint.json"
+          "$RUNNER_TEMP/actionlint" -color
+
+      - name: Run yamlfmt
+        run: |
+          "$RUNNER_TEMP/yamlfmt" -conf .github/yamlfmt.yml -lint .github
+
+      - name: Run zizmor
+        run: |
+          "$RUNNER_TEMP/zizmor" --format=github --no-online-audits .github

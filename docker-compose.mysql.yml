@@ -1,0 +1,49 @@
+name: reno_test_1-localtest
+volumes:
+  mysql_vol:
+
+services:
+  db:
+    image: mysql:8.0@sha256:64756cc92f707eb504496d774353990bcb0f6999ddf598b6ad188f2da66bd000
+    ports:
+      - "3306:3306"
+    environment:
+      TZ: UTC
+      MYSQL_DATABASE: reno_test_1
+      MYSQL_USER: user
+      MYSQL_PASSWORD: pass
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql_vol:/var/lib/mysql
+    restart: always
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "127.0.0.1"]
+      start_period: 30s
+      start_interval: 1s
+      retries: 10
+      timeout: 20s
+  webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+#      - ".:/usr/src/app"
+      - "/tmp:/log"
+      - "/tmp:/tmp"
+    environment:
+      DJANGO_SETTINGS_MODULE: reno_test_1.settings.mysqltest
+      APP_VERSION: local
+      USE_UWSGI_HTTP: "true"
+      REDIS_HOST: redis
+      MYSQL_HOST: db
+      MYSQL_DATABASE: reno_test_1
+      MYSQL_USER: root  # to create database for test
+      MYSQL_PASSWORD: root
+    command: /bin/sh -c "python -m manage migrate &&\
+                         exec uwsgi uwsgi.ini"
+    read_only: true

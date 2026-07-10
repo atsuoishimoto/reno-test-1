@@ -1,0 +1,16 @@
+name: Update exclude newer package
+
+on:
+  pull_request:
+
+permissions: {}
+
+jobs:
+  update-exclude-newer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # exclude-newer-package の更新 commit の push に必要
+    steps:
+      - name: Run update-exclude-newer-package
+        uses: nikkei/ds-ecs-django-project-template/gh-actions/update-exclude-newer-package@main

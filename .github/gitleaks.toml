@@ -1,0 +1,14 @@
+# https://github.com/gitleaks/gitleaks#configuration
+[extend]
+useDefault = true
+
+[allowlist]
+description = "テンプレート由来の既知の非シークレット"
+paths = [
+  # cookiecutter 生成時に SECRET_KEY（ランダム英数字64桁）が書き込まれ、
+  # generic-api-key ルールに検知される（実測で確認）ため除外する。
+  # 本物のシークレットをこのファイルに書かないこと
+  '''settings/__init__\.py''',
+  # uv.lock はハッシュ値の羅列で誤検知しやすいため除外する
+  '''uv\.lock''',
+]

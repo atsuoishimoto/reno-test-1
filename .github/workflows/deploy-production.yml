@@ -1,0 +1,84 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - "deployment/production"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build application for production
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 30
+    permissions:
+      id-token: write # AWS OIDC ロールの assume に必要
+      contents: read
+    outputs:
+      image-tag: ${{ steps.push.outputs.image-tag }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Login AWS
+        uses: "nikkei/gh-actions/aws-eb/login-aws/v1@main"
+        with:
+          role-to-assume: "arn:aws:iam::742708366935:role/oidc-github-actions-fargate"
+
+      - name: Build image
+        uses: "nikkei/gh-actions/aws-eb/build-image/v1@main"
+        with:
+          platforms: linux/amd64 # ,linux/arm64
+
+      - name: Push image
+        id: push
+        uses: "nikkei/gh-actions/aws-eb/push-image/v1@main"
+        with:
+          ecr-repository: reno_test_1-prod
+
+  deploy:
+    name: Deploy application for production
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 30
+    permissions:
+      id-token: write # AWS OIDC ロールの assume に必要
+      contents: read
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Login AWS
+        uses: "nikkei/gh-actions/aws-eb/login-aws/v1@main"
+        with:
+          role-to-assume: "arn:aws:iam::742708366935:role/oidc-github-actions-fargate"
+
+      - name: Rewrite task-definition
+        env:
+          IMAGE_TAG: ${{ needs.build.outputs.image-tag }}
+        run: |
+          sed -i -e "s/<TAG>/${IMAGE_TAG}/g" ECS-task-definition.prod.json
+
+      - name: Deploy to Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@fc8fc60f3a60ffd500fcb13b209c59d221ac8c8c # v2.6.1
+        with:
+          cluster: reno_test_1-prod
+          service: reno_test_1-prod
+          task-definition: ECS-task-definition.prod.json
+

@@ -1,0 +1,11 @@
+# ci-docker.yml の hadolint が --config で参照する設定。
+# ベース設定（github.zip）には同梱されていないため、本テンプレートの Dockerfile に
+# hadolint を実際に実行し、検出された指摘のうち意図的なものだけを ignore として記載した。
+# https://github.com/hadolint/hadolint#configure
+ignored:
+  # DL3008: apt-get install のバージョン未 pin 警告。
+  # apt パッケージは pin せず base image の更新で追従する方針のため無効化する
+  - DL3008
+  # DL3059: 連続する RUN の統合推奨。
+  # mysqlclient 用のコメントアウト行を挟んで RUN を意図的に分割しているため無効化する
+  - DL3059

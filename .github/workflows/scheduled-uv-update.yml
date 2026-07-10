@@ -1,0 +1,83 @@
+name: scheduled-uv-update
+
+on:
+  schedule:
+    - cron: "30 0 3 * *" # 毎月3日9:30
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  job1:
+    name: Update uv Library
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write # 更新ブランチの push に必要
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
+          # renovate: datasource=docker depName=ghcr.io/astral-sh/uv
+          version: "0.11.24"
+
+      - name: uv show outdated
+        id: show
+        run: |
+          uv_show=$(uv pip list --outdated)
+          echo "$uv_show"
+          {
+            echo "std_out<<EOF_UV_S279UL"
+            echo "$uv_show"
+            echo "EOF_UV_S279UL"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: uv update
+        id: update
+        run: |
+          uv_update=$(uv lock --upgrade 2>&1)
+          echo "$uv_update"
+          {
+            echo "std_out<<EOF_UV_S279UL"
+            echo "$uv_update"
+            echo "EOF_UV_S279UL"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create Pull Request
+        id: cpr
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0 # v8.1.0
+        with:
+          base: main
+          branch: "uv-update"
+          delete-branch: true
+          assignees: "${{ github.actor }}"
+          reviewers: "${{ github.actor }}"
+          commit-message: "uv update"
+          title: "uv update"
+          body: |
+            **The packages to update**
+
+            ```bash
+            ${{ steps.update.outputs.std_out }}
+            ```
+
+            **Show the latest version**
+
+            ```bash
+            ${{ steps.show.outputs.std_out }}
+            ```
+
+      - name: Check outputs
+        env:
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+          PR_URL: ${{ steps.cpr.outputs.pull-request-url }}
+        run: |
+          echo "Pull Request Number - ${PR_NUMBER}"
+          echo "Pull Request URL - ${PR_URL}"

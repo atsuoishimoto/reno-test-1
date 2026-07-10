@@ -1,0 +1,14 @@
+{
+  "revision": "3e9c2693cc24d45100cc6bbd1905cc45d2714ad2",
+  "template": "git@github.com:Nikkei/ds-ecs-django-project-template.git",
+  "variables": {
+    "_checkout": null,
+    "_output_dir": "/home/ishimoto/wk",
+    "_repo_dir": "/home/ishimoto/nikkei/ds-ecs-django-project-template",
+    "_template": "/home/ishimoto/nikkei/ds-ecs-django-project-template",
+    "app_name": "reno_test_1",
+    "deploy_mode": "native_bg",
+    "project_name": "reno_test_1",
+    "repo_name": "reno_test_1"
+  }
+}

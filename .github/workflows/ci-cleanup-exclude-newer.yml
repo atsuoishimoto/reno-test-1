@@ -1,0 +1,19 @@
+name: Cleanup exclude-newer-package
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 1 * * 4" # 毎週木曜日 10:00 JST (UTC+9)
+
+permissions: {}
+
+jobs:
+  cleanup-exclude-newer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write # 更新ブランチの push に必要
+      pull-requests: write
+    steps:
+      - name: Run clean-exclude-newer-package
+        uses: nikkei/ds-ecs-django-project-template/gh-actions/cleanup-exclude-newer-package@main

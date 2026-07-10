@@ -1,0 +1,96 @@
+{
+  "family": "reno_test_1-dev",
+  "executionRoleArn": "arn:aws:iam::187316225415:role/ecs-execution-role-reno_test_1-dev",
+  "taskRoleArn": "arn:aws:iam::187316225415:role/ecs-task-role-reno_test_1-dev",
+  "networkMode": "awsvpc",
+  "containerDefinitions": [
+    {
+      "name": "app",
+      "image": "187316225415.dkr.ecr.ap-northeast-1.amazonaws.com/reno_test_1-dev:<TAG>",
+      "essential": true,
+      "environment": [
+        {
+          "name": "APP_VERSION",
+          "value": "<TAG>"
+        },
+        {
+          "name": "DJANGO_SETTINGS_MODULE",
+          "value": "reno_test_1.settings.development"
+        },
+
+        {
+          "name": "UWSGI_RELOAD_ON_RSS",
+          "value": "256"
+        },
+        {
+          "name": "UWSGI_EVIL_RELOAD_ON_RSS",
+          "value": "320"
+        }
+
+      ],
+      "logConfiguration": {
+        "logDriver": "awsfirelens"
+      },
+      "cpu": 1856,
+      "memory": 1292
+    },
+    {
+      "name": "nginx",
+      "image": "187316225415.dkr.ecr.ap-northeast-1.amazonaws.com/ds-nginx-dev:latest",
+      "essential": true,
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/aws/ecs/reno_test_1-dev",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "container"
+        }
+      },
+      "portMappings": [
+        {
+          "hostPort": 8080,
+          "containerPort": 8080
+        }
+      ],
+      "cpu": 64,
+      "memory": 128
+    },
+    {
+      "name": "log_router",
+      "image": "187316225415.dkr.ecr.ap-northeast-1.amazonaws.com/ds-firelens-dev:latest",
+      "essential": true,
+      "environment": [
+        {
+          "name": "ECS_CLUSTER",
+          "value": "reno_test_1-dev"
+        },
+        {
+          "name": "ES_HOST",
+          "value": "log-es.dev.n8s.local"
+        },
+        {
+          "name": "PARSER_NAME",
+          "value": "uwsgi_ltsv_parser"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/aws/ecs/reno_test_1-dev",
+          "awslogs-region": "ap-northeast-1",
+          "awslogs-stream-prefix": "container"
+        }
+      },
+      "firelensConfiguration": {
+        "type": "fluentbit",
+        "options": {
+          "config-file-type": "file",
+          "config-file-value": "/fluent-bit/etc/extra.conf"
+        }
+      },
+      "cpu": 128,
+      "memory": 128
+    }
+  ],
+  "requiresCompatibilities": ["EC2"]
+}

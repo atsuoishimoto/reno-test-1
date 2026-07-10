@@ -1,0 +1,33 @@
+name: Security CodeQL / JS
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main", "deployment/production"]
+    paths:
+      - "**.js"
+      - "**.jsx"
+      - "**.ts"
+      - "**.tsx"
+      - "**.mjs"
+      - "**.cjs"
+      - "frontend/package.json"
+      - "frontend/pnpm-lock.yaml"
+      - ".github/workflows/security-codeql-js.yml"
+      - ".github/workflows/_security-codeql.yml"
+  schedule:
+    - cron: "40 20 * * 2"
+
+permissions: {}
+
+jobs:
+  codeql:
+    uses: ./.github/workflows/_security-codeql.yml
+    with:
+      language: javascript-typescript
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
