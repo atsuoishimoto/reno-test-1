@@ -28,7 +28,7 @@ exclude-newer-package = {nikkei-utils = false}
 [dependency-groups]
 dev = [
   "coverage==7.14.1",
-  "mypy==1.20.2",
+  "mypy==2.1.0",
   "pytest==9.1.0",
   "pytest-cov==7.1.0",
   "pytest-django==4.12.0",
@@ -38,7 +38,7 @@ dev = [
   "responses==0.26.1",
   "ruff==0.15.17",
   "taskipy==1.14.1",
-  "testfixtures==11.0.0",
+  "testfixtures==12.2.0",
   "tox==4.55.1",
   "tox-uv==1.35.2",
 ]
