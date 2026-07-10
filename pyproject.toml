@@ -2,7 +2,7 @@
 dependencies = [
   "Django==6.0.6",
   "nikkei-utils==1.10.0",
-  "sentry-sdk==2.62.0",
+  "sentry-sdk==2.64.0",
   "uWSGI==2.0.31",
   "whitenoise==6.12.0",
 ]
@@ -27,19 +27,19 @@ exclude-newer-package = {nikkei-utils = false}
 
 [dependency-groups]
 dev = [
-  "coverage==7.14.1",
+  "coverage==7.15.0",
   "mypy==1.20.2",
-  "pytest==9.1.0",
+  "pytest==9.1.1",
   "pytest-cov==7.1.0",
   "pytest-django==4.12.0",
   "pytest-mock==3.15.1",
   "pytest-randomly==4.1.0",
   "pytest-xdist==3.8.0",
-  "responses==0.26.1",
-  "ruff==0.15.17",
+  "responses==0.26.2",
+  "ruff==0.15.20",
   "taskipy==1.14.1",
   "testfixtures==11.0.0",
-  "tox==4.55.1",
+  "tox==4.56.1",
   "tox-uv==1.35.2",
 ]
 
