@@ -10,6 +10,63 @@ exclude-newer-span = "P3D"
 nikkei-utils = false
 
 [[package]]
+name = "aaa-2"
+version = "0.1.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "django" },
+    { name = "nikkei-utils" },
+    { name = "sentry-sdk" },
+    { name = "uwsgi" },
+    { name = "whitenoise" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "coverage" },
+    { name = "mypy" },
+    { name = "pytest" },
+    { name = "pytest-cov" },
+    { name = "pytest-django" },
+    { name = "pytest-mock" },
+    { name = "pytest-randomly" },
+    { name = "pytest-xdist" },
+    { name = "responses" },
+    { name = "ruff" },
+    { name = "taskipy" },
+    { name = "testfixtures" },
+    { name = "tox" },
+    { name = "tox-uv" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "django", specifier = "==6.0.8" },
+    { name = "nikkei-utils", specifier = "==1.10.0", index = "https://pypi.n8s.jp/9c346c40-7d2f-473e-9580-d41ee07d25ea/packages/simple" },
+    { name = "sentry-sdk", specifier = "==2.62.0" },
+    { name = "uwsgi", specifier = "==2.0.31" },
+    { name = "whitenoise", specifier = "==6.12.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "coverage", specifier = "==7.14.1" },
+    { name = "mypy", specifier = "==1.20.2" },
+    { name = "pytest", specifier = "==9.1.0" },
+    { name = "pytest-cov", specifier = "==7.1.0" },
+    { name = "pytest-django", specifier = "==4.12.0" },
+    { name = "pytest-mock", specifier = "==3.15.1" },
+    { name = "pytest-randomly", specifier = "==4.1.0" },
+    { name = "pytest-xdist", specifier = "==3.8.0" },
+    { name = "responses", specifier = "==0.26.1" },
+    { name = "ruff", specifier = "==0.15.17" },
+    { name = "taskipy", specifier = "==1.14.1" },
+    { name = "testfixtures", specifier = "==11.0.0" },
+    { name = "tox", specifier = "==4.55.1" },
+    { name = "tox-uv", specifier = "==1.35.2" },
+]
+
+[[package]]
 name = "asgiref"
 version = "3.11.1"
 source = { registry = "https://pypi.org/simple" }
@@ -71,63 +128,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cookiecutter-repo-name"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "django" },
-    { name = "nikkei-utils" },
-    { name = "sentry-sdk" },
-    { name = "uwsgi" },
-    { name = "whitenoise" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "coverage" },
-    { name = "mypy" },
-    { name = "pytest" },
-    { name = "pytest-cov" },
-    { name = "pytest-django" },
-    { name = "pytest-mock" },
-    { name = "pytest-randomly" },
-    { name = "pytest-xdist" },
-    { name = "responses" },
-    { name = "ruff" },
-    { name = "taskipy" },
-    { name = "testfixtures" },
-    { name = "tox" },
-    { name = "tox-uv" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "django", specifier = "==6.0.6" },
-    { name = "nikkei-utils", specifier = "==1.10.0", index = "https://pypi.n8s.jp/9c346c40-7d2f-473e-9580-d41ee07d25ea/packages/simple" },
-    { name = "sentry-sdk", specifier = "==2.62.0" },
-    { name = "uwsgi", specifier = "==2.0.31" },
-    { name = "whitenoise", specifier = "==6.12.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "coverage", specifier = "==7.14.1" },
-    { name = "mypy", specifier = "==1.20.2" },
-    { name = "pytest", specifier = "==9.1.0" },
-    { name = "pytest-cov", specifier = "==7.1.0" },
-    { name = "pytest-django", specifier = "==4.12.0" },
-    { name = "pytest-mock", specifier = "==3.15.1" },
-    { name = "pytest-randomly", specifier = "==4.1.0" },
-    { name = "pytest-xdist", specifier = "==3.8.0" },
-    { name = "responses", specifier = "==0.26.1" },
-    { name = "ruff", specifier = "==0.15.17" },
-    { name = "taskipy", specifier = "==1.14.1" },
-    { name = "testfixtures", specifier = "==11.0.0" },
-    { name = "tox", specifier = "==4.55.1" },
-    { name = "tox-uv", specifier = "==1.35.2" },
-]
-
-[[package]]
 name = "coverage"
 version = "7.14.1"
 source = { registry = "https://pypi.org/simple" }
@@ -177,16 +177,16 @@ wheels = [
 
 [[package]]
 name = "django"
-version = "6.0.6"
+version = "6.0.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "asgiref" },
     { name = "sqlparse" },
     { name = "tzdata", marker = "sys_platform == 'win32'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/78/29/ac41e16097af67066d97a7d5775c5d8e7efc5d0284f6b0a159e07b9adb92/django-6.0.6.tar.gz", hash = "sha256:ad03916ba59523d781ae5c3f631960c23d69a9d9c43cecda52fc23b47e953713", size = 10905525, upload-time = "2026-06-03T13:02:46.503Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3c/28/5fee292e588dbdb782582436d1eb62ac8809ec55b98ef27f5b9676a00e9a/django-6.0.8.tar.gz", hash = "sha256:cb0bd962d27fc866f3c514b20aae6a7df56ec80b488f9899da46d675cd051526", size = 10924565, upload-time = "2026-08-04T15:03:39.469Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/50/23f9dc45483419a3cc2085b498b25adfbf10642b2941c73e6d2dfaffc9ab/django-6.0.6-py3-none-any.whl", hash = "sha256:25148b1194c47c2e685e5f5e9c5d59c78b075dfd282cb9618861ba6c1708f4d2", size = 8373354, upload-time = "2026-06-03T13:02:41.72Z" },
+    { url = "https://files.pythonhosted.org/packages/2e/b4/23e74d261eebfa9c8baed5e8810f09858b9afd613d1037f42ff7aa95c87f/django-6.0.8-py3-none-any.whl", hash = "sha256:9b98b7e1902e0e575ea4f42c175fc9512784f7f2580898286aee3388b322219d", size = 8376956, upload-time = "2026-08-04T15:03:35.138Z" },
 ]
 
 [[package]]
@@ -295,9 +295,9 @@ dependencies = [
     { name = "requests" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://pypi.n8s.jp/9c346c40-7d2f-473e-9580-d41ee07d25ea/packages/simple/nikkei-utils/nikkei_utils-1.10.0.tar.gz" }
+sdist = { url = "https://pypi.n8s.jp/9c346c40-7d2f-473e-9580-d41ee07d25ea/packages/nikkei_utils-1.10.0.tar.gz" }
 wheels = [
-    { url = "https://pypi.n8s.jp/9c346c40-7d2f-473e-9580-d41ee07d25ea/packages/simple/nikkei-utils/nikkei_utils-1.10.0-py3-none-any.whl" },
+    { url = "https://pypi.n8s.jp/9c346c40-7d2f-473e-9580-d41ee07d25ea/packages/nikkei_utils-1.10.0-py3-none-any.whl" },
 ]
 
 [[package]]
