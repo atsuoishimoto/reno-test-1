@@ -1,6 +1,6 @@
 [project]
 dependencies = [
-  "Django==6.0.6",
+  "Django==6.0.8",
   "nikkei-utils==1.10.0",
   "sentry-sdk==2.62.0",
   "uWSGI==2.0.31",
